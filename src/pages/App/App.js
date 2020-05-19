@@ -20,7 +20,10 @@ class App extends Component {
     return {
       selColorIdx: 0,
       guesses: [this.getNewGuess()],
-      code: this.genCode()
+      code: this.genCode(),
+      // new state coming in!
+      elapsedTime: 0,
+      isTiming: true
     };
   }
 
@@ -46,9 +49,12 @@ class App extends Component {
     return this.state.guesses[lastGuess].score.perfect === 4 ? lastGuess + 1 : 0;
   }
 
+  handleTimerUpdate = () => {
+    this.setState((curState) => ({elapsedTime: ++curState.elapsedTime}));
+  }
+
   handleDifficultyChange = (level) => {
-    // Use callback to ensure level is updated BEFORE calling handleNewGameClick
-    this.setState({difficulty: level}, () => this.handleNewGameClick());
+    this.setState({difficulty: level, ...this.getInitialState()});
   }
 
   handleColorSelection = (colorIdx) => {
@@ -123,22 +129,17 @@ class App extends Component {
     let guessCopy = {...guessesCopy[currentGuessIdx]};
     let scoreCopy = {...guessCopy.score};
 
-    // Set scores
     scoreCopy.perfect = perfect;
     scoreCopy.almost = almost;
-
-    // Update the NEW guess with the NEW score object
     guessCopy.score = scoreCopy;
-
-    // Update the NEW guesses with the NEW guess object
     guessesCopy[currentGuessIdx] = guessCopy;
 
-    // Add a new guess if not a winner
     if (perfect !== 4) guessesCopy.push(this.getNewGuess());
 
-    // Finally, update the state with the NEW guesses array
     this.setState({
-      guesses: guessesCopy
+      guesses: guessesCopy,
+      // This is a great way to update isTiming
+      isTiming: perfect !== 4
     });
   }
 
@@ -154,10 +155,13 @@ class App extends Component {
               colors={colors[this.state.difficulty]}
               selColorIdx={this.state.selColorIdx}
               guesses={this.state.guesses}
+              elapsedTime={this.state.elapsedTime}
+              isTiming={this.state.isTiming}
               handleColorSelection={this.handleColorSelection}
               handleNewGameClick={this.handleNewGameClick}
               handlePegClick={this.handlePegClick}
               handleScoreClick={this.handleScoreClick}
+              handleTimerUpdate={this.handleTimerUpdate}
             />
           } />
           <Route exact path='/settings' render={props => 
